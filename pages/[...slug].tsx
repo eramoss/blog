@@ -7,6 +7,7 @@ import path from 'path'
 import PostSingle from '../components/blog/post-single'
 import Layout from '../components/misc/layout'
 import { NextSeo } from 'next-seo'
+import PostList from '../components/blog/post-list'
 
 type Items = {
   title: string,
@@ -17,9 +18,10 @@ type Props = {
   post: PostType
   slug: string
   backlinks: { [k: string]: Items }
+  allPosts: PostType[]
 }
 
-export default function Post({ post, backlinks }: Props) {
+export default function Post({ post, backlinks, allPosts }: Props) {
   const router = useRouter()
   const description = post.excerpt.slice(0, 155)
   if (!router.isFallback && !post?.slug) {
@@ -40,19 +42,28 @@ export default function Post({ post, backlinks }: Props) {
               type: 'article',
               images: [{
                 url: (post.ogImage?.url) ? post.ogImage.url : "https://fleetingnotes.app/favicon/512.png",
-                width: (post.ogImage?.url) ? null: 512,
-                height: (post.ogImage?.url) ? null: 512,
+                width: (post.ogImage?.url) ? null : 512,
+                height: (post.ogImage?.url) ? null : 512,
                 type: null
               }]
             }}
           />
-          <PostSingle
-            title={post.title}
-            content={post.content}
-            date={post.date}
-            author={post.author}
-            backlinks={backlinks}
-          />
+          {
+            router.asPath.includes('home') ? (
+              <>
+                <PostList posts={allPosts || []} />
+              </>
+            )
+              : (
+                <PostSingle
+                  title={post.title}
+                  content={post.content}
+                  date={post.date}
+                  author={post.author}
+                  backlinks={backlinks}
+                />
+              )
+          }
         </Layout>
       )}
     </>
@@ -77,6 +88,13 @@ export async function getStaticProps({ params }: Params) {
     'content',
     'ogImage',
   ])
+  const allPosts = await getAllPosts(['title',
+    'excerpt',
+    'date',
+    'slug',
+    'author',
+    'content',
+    'ogImage',])
   const content = await markdownToHtml(post.content || '', slug)
   const linkMapping = await getLinksMapping()
   const backlinks = Object.keys(linkMapping).filter(k => linkMapping[k].includes(post.slug) && k !== post.slug)
@@ -92,6 +110,7 @@ export async function getStaticProps({ params }: Params) {
         content,
       },
       backlinks: backlinkNodes,
+      allPosts: allPosts
     },
   }
 }
@@ -104,7 +123,7 @@ export async function getStaticPaths() {
         params: {
           slug: post.slug.split(path.sep),
         },
-      } 
+      }
     }),
     fallback: false,
   }
