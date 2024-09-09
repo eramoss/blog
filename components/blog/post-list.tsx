@@ -8,6 +8,8 @@ type Props = {
 }
 
 function PostList({ posts }: Props) {
+  posts = posts.sort((a, b) => (a.date > b.date ? -1 : 1));
+  posts = posts.filter((post) => post.slug !== 'home');
   return (
     <section>
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
