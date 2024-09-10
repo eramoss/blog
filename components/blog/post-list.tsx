@@ -36,6 +36,7 @@ function PostList({ posts }: Props) {
   filteredPosts = filteredPosts.sort((a, b) =>
     new Date(b.date || '2000-10-10').getTime() - new Date(a.date || '2000-10-10').getTime()
   );
+  filteredPosts.filter(post => post.slug !== 'home');
 
   return (
     <section>
