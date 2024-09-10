@@ -1,14 +1,13 @@
 import React from 'react';
 import PostPreview from './post-preview'
 import type Post from '../../interfaces/post';
-import PreviewLink from '../misc/preview-link';
 
 type Props = {
   posts: Post[]
 }
 
 function PostList({ posts }: Props) {
-  posts = posts.sort((a, b) => (a.date > b.date ? -1 : 1));
+  posts = posts.sort((a, b) => new Date(b.date || "2000-10-10").getTime() - new Date(a.date || "2000-10-10").getTime());
   posts = posts.filter((post) => post.slug !== 'home');
   return (
     <section>
@@ -18,7 +17,7 @@ function PostList({ posts }: Props) {
           {/* Page header */}
           <div className="max-w-3xl pb-12 md:pb-20 text-center md:text-left">
             <h1 className="h1 mb-4">Explore my thoughts</h1>
-            <p className="text-xl text-gray-600">Posts are connected through <PreviewLink href="/notes/bi-directional-links">bi-directional links</PreviewLink>. Click any post and check it out!</p>
+            <p className="text-xl text-gray-600 dark:text-gray-400">I write about things that interest me, and sometimes I even finish them.</p>
           </div>
 
           {/* Main content */}
