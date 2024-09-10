@@ -1,5 +1,7 @@
 ---
 title: How to connect Obsidian Vault with Github
+tags:
+  - home
 ---
 
 1. Clone the repository or "Download As Zip"

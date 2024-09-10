@@ -94,7 +94,9 @@ export async function getStaticProps({ params }: Params) {
     'slug',
     'author',
     'content',
-    'ogImage',])
+    'ogImage',
+    'tags'
+  ])
   const content = await markdownToHtml(post.content || '', slug)
   const linkMapping = await getLinksMapping()
   const backlinks = Object.keys(linkMapping).filter(k => linkMapping[k].includes(post.slug) && k !== post.slug)
