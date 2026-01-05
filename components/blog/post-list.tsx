@@ -6,9 +6,19 @@ type Props = {
   posts: Post[];
 }
 
+// Array de mensagens satíricas
+const SASSY_MESSAGES = [
+  "Sério que você tá tentando quebrar um blog?",
+  "Tu sabe que isso é um site estático né? tipo se quebrar parabéns agora da f5",
+  "Temos um Sherlock Holmes aqui! Tente colocar a data de início antes da de fim.",
+  "Erro 418: Sou um bule de chá e nem eu aceito essa data.",
+  "Incrível. Simplesmente incrível. Tente de novo, mas dessa vez com lógica."
+];
+
 function PostList({ posts }: Props) {
   const [filterTags, setFilterTags] = React.useState<string[]>([]);
   const [filterDates, setFilterDates] = React.useState<[string, string] | null>([null, new Date().toISOString().split('T')[0]]);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   const handleTagFilter = (tag: string) => {
     if (filterTags.includes(tag)) {
@@ -19,6 +29,18 @@ function PostList({ posts }: Props) {
   };
 
   const handleDateFilter = (start: string, end: string) => {
+    setErrorMessage(null); // Reseta o erro ao mudar
+
+    if (start && end) {
+      const startDate = new Date(start).getTime();
+      const endDate = new Date(end).getTime();
+
+      if (startDate > endDate) {
+        const randomMessage = SASSY_MESSAGES[Math.floor(Math.random() * SASSY_MESSAGES.length)];
+        setErrorMessage(randomMessage);
+        return; // Não atualiza o filtro se estiver errado
+      }
+    }
     setFilterDates([start, end]);
   };
 
@@ -43,15 +65,12 @@ function PostList({ posts }: Props) {
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="pt-32 pb-12 md:pt-40 md:pb-20">
 
-          {/* Page header */}
           <div className="max-w-3xl pb-12 md:pb-20 text-center md:text-left">
             <h1 className="h1 mb-4">Explore my thoughts</h1>
             <p className="text-xl text-gray-600 dark:text-gray-400">I write about things that interest me, and sometimes I even finish them.</p>
           </div>
 
-          {/* Filters */}
           <div className="mb-8">
-            {/* tags */}
             <div className="mb-4">
               <label className="block text-lg mb-2">Filter by Tags:</label>
               <div className="flex flex-wrap gap-2">
@@ -67,7 +86,6 @@ function PostList({ posts }: Props) {
               </div>
             </div>
 
-            {/* dates */}
             <div className="mb-4">
               <label className="block text-lg mb-2">Filter by Date:</label>
               <div className="flex items-center gap-4">
@@ -75,34 +93,41 @@ function PostList({ posts }: Props) {
                   type="date"
                   className="border px-3 py-2"
                   onChange={(e) => handleDateFilter(e.target.value, filterDates ? filterDates[1] : '')}
-                  placeholder="Start date"
                 />
                 <span>to</span>
                 <input
                   type="date"
                   className="border px-3 py-2"
                   onChange={(e) => handleDateFilter(filterDates ? filterDates[0] : '', e.target.value)}
-                  placeholder="End date"
                   value={filterDates ? filterDates[1] : ''}
                 />
               </div>
+              
+              {/* Exibição da mensagem de erro */}
+              {errorMessage && (
+                <div className="mt-2 text-red-500 font-medium italic animate-bounce">
+                  {errorMessage}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Main content */}
           <div className="md:flex md:justify-between">
-            {/* Articles container */}
             <div className="md:grow -mt-4">
-              {filteredPosts.map((post) => (
-                <PostPreview
-                  key={post.slug}
-                  title={post.title}
-                  date={post.date}
-                  excerpt={post.excerpt}
-                  author={post.author}
-                  slug={post.slug}
-                />
-              ))}
+              {filteredPosts.length > 0 ? (
+                filteredPosts.map((post) => (
+                  <PostPreview
+                    key={post.slug}
+                    title={post.title}
+                    date={post.date}
+                    excerpt={post.excerpt}
+                    author={post.author}
+                    slug={post.slug}
+                  />
+                ))
+              ) : (
+                <p className="text-gray-500 mt-8">Nenhum post encontrado para essa loucura de filtros.</p>
+              )}
             </div>
           </div>
 
