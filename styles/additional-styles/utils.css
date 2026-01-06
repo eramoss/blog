@@ -1,12 +1,17 @@
-article p img {
+article img:not(#author):not([id="author"]) {
   cursor: zoom-in;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, filter 0.2s ease;
 }
 
-article p img:hover {
+article img:not(#author):not([id="author"]):hover {
   transform: scale(1.01);
   filter: brightness(0.95);
 }
+
+article img#author {
+  cursor: default;
+}
+
 
 body:has(.fixed.inset-0) {
   overflow: hidden;

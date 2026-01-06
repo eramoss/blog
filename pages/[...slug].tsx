@@ -38,7 +38,6 @@ export default function Post({ post, backlinks, allPosts }: Props) {
 		const pass = process.env.NEXT_PUBLIC_SKETCH_VIEW_PASS;
 		const cookie = getCookie("sketch_view");
 		const hasAccess = cookie === pass && cookie != undefined;
-		console.log(post);
 		if (post.tags?.includes("sketch") && !hasAccess) {
 			setAuthorized(false);
 		} else {

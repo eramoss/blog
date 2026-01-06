@@ -8,7 +8,7 @@ export default function ImageModalProvider() {
 	useEffect(() => {
 		const handleGlobalClick = (e) => {
 			const target = e.target;
-			if (target.tagName === "IMG" && target.closest("p")) {
+			if (target.tagName === "IMG" && target.closest("article") && target.id !== "author") {
 				setModalImg(target.src);
 			}
 		};
@@ -33,9 +33,13 @@ export default function ImageModalProvider() {
 			className="modal-overlay fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm cursor-zoom-out"
 			onClick={() => setModalImg(null)}
 		>
-			<div className="relative max-w-[90vw] max-h-[90vh]">
+			<div className="relative">
 				<Image
 					src={modalImg}
+					width={96}
+					height={54}
+					unoptimized
+					loading="eager"
 					className="modal-image w-full h-full object-contain rounded-sm shadow-2xl"
 					alt="Enlarged"
 				/>

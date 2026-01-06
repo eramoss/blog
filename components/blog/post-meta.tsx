@@ -24,6 +24,7 @@ const PostMeta = ({ author, date }: Props) => {
 								width="32"
 								height="32"
 								alt="Author"
+								id="author"
 							/>
 						</a>
 					</div>
