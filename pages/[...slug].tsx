@@ -8,6 +8,7 @@ import PostSingle from '../components/blog/post-single'
 import Layout from '../components/misc/layout'
 import { NextSeo } from 'next-seo'
 import PostList from '../components/blog/post-list'
+import ImageModalProvider from '../components/misc/image-modal-provider.tsx';
 
 type Items = {
 	title: string,
@@ -69,6 +70,7 @@ export default function Post({ post, backlinks, allPosts }: Props) {
 					/>
 				)
 		}
+		<ImageModalProvider/> {}
 		</Layout>
 		)}
 		</>

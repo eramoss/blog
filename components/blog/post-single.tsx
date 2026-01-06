@@ -3,6 +3,7 @@ import Author from '../../interfaces/author';
 import Backlinks from '../misc/backlinks';
 import PostBody from './post-body';
 import PostMeta from './post-meta';
+import TableOfContents from '../misc/table-of-contents.tsx'
 
 type Props = {
   title: string,
@@ -68,6 +69,7 @@ function PostSingle({
                             <Backlinks backlinks={backlinks} />
                         )
                       }
+											<TableOfContents />
                     </div>
                   </div>
                 </aside>

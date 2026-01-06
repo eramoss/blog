@@ -1,3 +1,47 @@
+article p img {
+  cursor: zoom-in;
+  transition: transform 0.2s ease;
+}
+
+article p img:hover {
+  transform: scale(1.01);
+  filter: brightness(0.95);
+}
+
+body:has(.fixed.inset-0) {
+  overflow: hidden;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes zoomIn {
+  from { 
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-overlay {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-image {
+  animation: zoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+
+
 .internal-link-container > .note-preview {
   @apply hidden absolute w-[350px] left-0 z-50;
   text-align: left !important;
