@@ -8,7 +8,8 @@ import PostSingle from '../components/blog/post-single'
 import Layout from '../components/misc/layout'
 import { NextSeo } from 'next-seo'
 import PostList from '../components/blog/post-list'
-import ImageModalProvider from '../components/misc/image-modal-provider.tsx';
+import ImageModalProvider from '../components/misc/image-modal-provider'
+import { useEffect, useState } from 'react'
 
 type Items = {
 	title: string,
@@ -24,55 +25,88 @@ type Props = {
 
 export default function Post({ post, backlinks, allPosts }: Props) {
 	const router = useRouter()
-	const description = post.excerpt.slice(0, 155)
-	if (!router.isFallback && !post?.slug) {
+	const [authorized, setAuthorized] = useState<boolean | null>(null)
+	const [visiblePosts, setVisiblePosts] = useState<PostType[]>([])
+
+	useEffect(() => {
+		const getCookie = (name: string) => {
+			const value = `; ${document.cookie}`;
+			const parts = value.split(`; ${name}=`);
+			if (parts.length === 2) return parts.pop()?.split(';').shift();
+		}
+
+		const pass = process.env.NEXT_PUBLIC_SKETCH_VIEW_PASS
+		const cookie = getCookie('sketch_view')
+		const hasAccess = cookie === pass && cookie != undefined
+		console.log(post);
+		if (post.tags?.includes('sketch') && !hasAccess) {
+			setAuthorized(false)
+		} else {
+			setAuthorized(true)
+		}
+
+		const filtered = (allPosts || []).filter(p => {
+			if (p.tags?.includes('sketch')) {
+				return hasAccess
+			}
+			return true
+		})
+		setVisiblePosts(filtered)
+	}, [post, allPosts])
+
+	if (authorized === null) {
+		return null
+	}
+
+	if (!router.isFallback && (!post?.slug || !authorized)) {
 		return <ErrorPage statusCode={404} />
 	}
+
+	const description = post.excerpt.slice(0, 155)
+
 	return (
 		<>
-		{router.isFallback ? (
-			<h1>Loading…</h1>
-		) : (
-		<Layout>
-		<NextSeo
-		title={post.title}
-		description={description}
-		openGraph={{
-			title: post.title,
-			description,
-			type: 'article',
-			images: [{
-				url: (post.ogImage?.url) ? post.ogImage.url : "https://fleetingnotes.app/favicon/512.png",
-				width: (post.ogImage?.url) ? null : 512,
-				height: (post.ogImage?.url) ? null : 512,
-				type: null
-			}]
-		}}
-		/>
-		{
-			router.asPath.includes('home') ? (
-				<>
-				<PostList posts={allPosts || []} />
-				<footer className="mt-2 py-8 ">
-				<p className="text-center text-xs text-gray-400 italic leading-relaxed max-w-2xl mx-auto px-4">
-				**Disclaimer:** O site está inglês porque não tenho nenhum compromisso de escrever em português, eu vou sempre que possivel, mas se o assunto conver melhor em inglês vai ser inglês.
-					</p>
-				</footer>
-				</>
-			)
-				: (
-					<PostSingle
-					title={post.title}
-					content={post.content}
-					date={post.date}
-					author={post.author}
-					backlinks={backlinks}
+			{router.isFallback ? (
+				<h1>Loading…</h1>
+			) : (
+				<Layout>
+					<NextSeo
+						title={post.title}
+						description={description}
+						openGraph={{
+							title: post.title,
+							description,
+							type: 'article',
+							images: [{
+								url: (post.ogImage?.url) ? post.ogImage.url : "https://fleetingnotes.app/favicon/512.png",
+								width: (post.ogImage?.url) ? undefined : 512,
+								height: (post.ogImage?.url) ? undefined : 512,
+							}]
+						}}
 					/>
-				)
-		}
-		<ImageModalProvider/> {}
-		</Layout>
-		)}
+					{
+						router.asPath.includes('home') ? (
+							<>
+								<PostList posts={visiblePosts} />
+								<footer className="mt-2 py-8 ">
+									<p className="text-center text-xs text-gray-400 italic leading-relaxed max-w-2xl mx-auto px-4">
+										**Disclaimer:** O site está inglês porque não tenho nenhum compromisso de escrever em português, eu vou sempre que possivel, mas se o assunto conver melhor em inglês vai ser inglês.
+									</p>
+								</footer>
+							</>
+						) : (
+							<PostSingle
+								title={post.title}
+								content={post.content}
+								date={post.date}
+								author={post.author}
+								backlinks={backlinks}
+							/>
+						)
+					}
+					<ImageModalProvider />
+				</Layout>
+			)}
 		</>
 	)
 }
@@ -86,7 +120,7 @@ type Params = {
 
 export async function getStaticProps({ params }: Params) {
 	const slug = path.join(...params.slug)
-	const post = await getPostBySlug(slug, [
+	const post = getPostBySlug(slug, [
 		'title',
 		'excerpt',
 		'date',
@@ -94,21 +128,25 @@ export async function getStaticProps({ params }: Params) {
 		'author',
 		'content',
 		'ogImage',
+		'tags',
 	])
-	const allPosts = await getAllPosts(['title',
-																		 'excerpt',
-	'date',
-	'slug',
-	'author',
-	'content',
-	'ogImage',
-	'tags'
+
+	const allPosts = getAllPosts([
+		'title',
+		'excerpt',
+		'date',
+		'slug',
+		'author',
+		'content',
+		'ogImage',
+		'tags'
 	])
+
 	const content = await markdownToHtml(post.content || '', slug)
-	const linkMapping = await getLinksMapping()
+	const linkMapping = getLinksMapping()
 	const backlinks = Object.keys(linkMapping).filter(k => linkMapping[k].includes(post.slug) && k !== post.slug)
 	const backlinkNodes = Object.fromEntries(await Promise.all(backlinks.map(async (slug) => {
-		const post = await getPostBySlug(slug, ['title', 'excerpt']);
+		const post = getPostBySlug(slug, ['title', 'excerpt']);
 		return [slug, post]
 	})));
 
@@ -124,8 +162,8 @@ export async function getStaticProps({ params }: Params) {
 	}
 }
 
-export async function getStaticPaths() {
-	const posts = await getAllPosts(['slug'])
+export function getStaticPaths() {
+	const posts = getAllPosts(['slug'])
 	return {
 		paths: posts.map((post) => {
 			return {
