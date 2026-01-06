@@ -39,7 +39,7 @@ export default function Post({ post, backlinks, allPosts }: Props) {
 
 		const pass = process.env.NEXT_PUBLIC_SKETCH_VIEW_PASS;
 		const cookie = getCookie("sketch_view");
-		const hasAccess = cookie === pass && cookie !== undefined && pass !== undefined && pass !== "";
+		const hasAccess = cookie === pass && cookie != undefined;
 
 		if (post.tags?.includes("sketch") && !hasAccess) {
 			setAuthorized(false);
@@ -56,7 +56,7 @@ export default function Post({ post, backlinks, allPosts }: Props) {
 		setVisiblePosts(filteredPosts);
 
 		const filteredBacklinks = Object.fromEntries(
-			Object.entries(backlinks || {}).filter(([_, item]) => {
+			Object.entries(backlinks).filter(([_, item]) => {
 				if (item.tags?.includes("sketch")) {
 					return hasAccess;
 				}
@@ -137,39 +137,44 @@ type Params = {
 
 export async function getStaticProps({ params }: Params) {
 	const slug = path.join(...params.slug);
-	const rawPost = getPostBySlug(slug, ["title", "excerpt", "content", "tags", "slug", "date", "author", "ogImage"]);
+	const post = getPostBySlug(slug, [
+		"title",
+		"excerpt",
+		"date",
+		"slug",
+		"author",
+		"content",
+		"ogImage",
+		"tags",
+	]);
 
-	const isSketch = rawPost.tags ? rawPost.tags?.includes("sketch") : false;
+	const allPosts = getAllPosts([
+		"title",
+		"excerpt",
+		"date",
+		"slug",
+		"author",
+		"content",
+		"ogImage",
+		"tags",
+	]);
 
-	const post = isSketch ? {
-		...rawPost,
-		title: "Protected Content",
-		excerpt: "This content requires authorization to view.",
-		content: "",
-	} : rawPost;
-
-	const allPostsRaw = getAllPosts(["title", "excerpt", "slug", "tags", "date"]);
-
-	const allPosts = allPostsRaw.map(p => {
-		if (p.tags?.includes("sketch")) {
-			return { slug: p.slug, tags: p.tags, title: "[Protected]", excerpt: "" };
-		}
-		return p;
-	});
-
-	const content = isSketch ? "" : await markdownToHtml(post.content || "", slug);
+	const content = await markdownToHtml(post.content || "", slug);
 
 	const linkMapping = getLinksMapping();
 	const backlinksSlugs = Object.keys(linkMapping).filter(
 		(k) => linkMapping[k].includes(post.slug) && k !== post.slug,
 	);
-
 	const backlinkNodes = Object.fromEntries(
 		await Promise.all(
 			backlinksSlugs.map(async (s) => {
 				const bPost = getPostBySlug(s, ["title", "excerpt", "tags"]);
 				if (bPost.tags?.includes("sketch")) {
-					return [s, { title: "[Protected]", excerpt: "", tags: bPost.tags }];
+					return [s, {
+						...bPost,
+						title: "[Protected]",
+						excerpt: "coming soon fella :)"
+					}];
 				}
 				return [s, bPost];
 			}),
@@ -178,10 +183,12 @@ export async function getStaticProps({ params }: Params) {
 
 	return {
 		props: {
-			post: { ...post, content },
+			post: {
+				...post,
+				content,
+			},
 			backlinks: backlinkNodes,
 			allPosts: allPosts,
-			isSketch
 		},
 	};
 }
