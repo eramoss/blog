@@ -148,7 +148,7 @@ export async function getStaticProps({ params }: Params) {
 		"tags",
 	]);
 
-	const allPosts = getAllPosts([
+	const allPostsRaw = getAllPosts([
 		"title",
 		"excerpt",
 		"date",
@@ -172,14 +172,24 @@ export async function getStaticProps({ params }: Params) {
 				if (bPost.tags?.includes("sketch")) {
 					return [s, {
 						...bPost,
-						title: "[Protected]",
-						excerpt: "coming soon fella :)"
+						excerpt: "coming soon"
 					}];
 				}
 				return [s, bPost];
 			}),
 		),
 	);
+
+	const allPosts = allPostsRaw.map((p) => {
+		if (p.tags?.includes("sketch")) {
+			return {
+				...p,
+				excerpt: "coming soon",
+				content: ""
+			};
+		}
+		return p;
+	});
 
 	return {
 		props: {
