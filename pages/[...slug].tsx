@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 type Items = {
 	title: string;
 	excerpt: string;
+	tags?: string[];
 };
 
 type Props = {
@@ -27,6 +28,7 @@ export default function Post({ post, backlinks, allPosts }: Props) {
 	const router = useRouter();
 	const [authorized, setAuthorized] = useState<boolean | null>(null);
 	const [visiblePosts, setVisiblePosts] = useState<PostType[]>([]);
+	const [visibleBacklinks, setVisibleBacklinks] = useState<{ [k: string]: Items }>({});
 
 	useEffect(() => {
 		const getCookie = (name: string) => {
@@ -38,20 +40,31 @@ export default function Post({ post, backlinks, allPosts }: Props) {
 		const pass = process.env.NEXT_PUBLIC_SKETCH_VIEW_PASS;
 		const cookie = getCookie("sketch_view");
 		const hasAccess = cookie === pass && cookie != undefined;
+
 		if (post.tags?.includes("sketch") && !hasAccess) {
 			setAuthorized(false);
 		} else {
 			setAuthorized(true);
 		}
 
-		const filtered = (allPosts || []).filter((p) => {
+		const filteredPosts = (allPosts || []).filter((p) => {
 			if (p.tags?.includes("sketch")) {
 				return hasAccess;
 			}
 			return true;
 		});
-		setVisiblePosts(filtered);
-	}, [post, allPosts]);
+		setVisiblePosts(filteredPosts);
+
+		const filteredBacklinks = Object.fromEntries(
+			Object.entries(backlinks).filter(([_, item]) => {
+				if (item.tags?.includes("sketch")) {
+					return hasAccess;
+				}
+				return true;
+			})
+		);
+		setVisibleBacklinks(filteredBacklinks);
+	}, [post, allPosts, backlinks]);
 
 	if (authorized === null) {
 		return null;
@@ -105,7 +118,7 @@ export default function Post({ post, backlinks, allPosts }: Props) {
 							content={post.content}
 							date={post.date}
 							author={post.author}
-							backlinks={backlinks}
+							backlinks={visibleBacklinks}
 						/>
 					)}
 					<ImageModalProvider />
@@ -154,7 +167,7 @@ export async function getStaticProps({ params }: Params) {
 	const backlinkNodes = Object.fromEntries(
 		await Promise.all(
 			backlinks.map(async (slug) => {
-				const post = getPostBySlug(slug, ["title", "excerpt"]);
+				const post = getPostBySlug(slug, ["title", "excerpt", "tags"]);
 				return [slug, post];
 			}),
 		),
