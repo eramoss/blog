@@ -39,9 +39,11 @@ export default function postHandler(req: NextApiRequest, res: NextApiResponse) {
 	const filteredResults = searchedPosts
 		.filter((match) => {
 			const isSketch = match.item.tags?.includes("sketch");
+			const isHome = match.item.slug == "home";
 			if (isSketch) {
 				return hasAccess;
 			}
+			if (isHome) return false;
 			return true;
 		})
 		.slice(0, 10);
