@@ -1,19 +1,17 @@
-import React from 'react'
-import Header from './header'
+import React from "react";
+import Header from "./header";
 
 type Props = {
-  children: React.ReactNode
-}
+	children: React.ReactNode;
+};
 
 const Layout = ({ children }: Props) => {
-  return (
-    <div className="flex flex-col min-h-screen overflow-hidden">
-      <Header />
-      <main className="grow">
-        {children}
-      </main>
-    </div>
-  )
-}
+	return (
+		<div className="flex flex-col min-h-screen overflow-hidden">
+			<Header />
+			<main className="grow">{children}</main>
+		</div>
+	);
+};
 
-export default Layout
+export default Layout;
