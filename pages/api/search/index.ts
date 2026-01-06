@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getAllPosts } from "../../../lib/api";
 import { getMDExcerpt } from "../../../lib/markdownToHtml";
 
-const allPosts = getAllPosts(["slug", "title", "content", "author", "date"]);
+const allPosts = getAllPosts(["slug", "title", "content", "author", "date", "tags"]);
 const searchIndex = allPosts.map((p) => {
 	return {
 		slug: p.slug,
@@ -11,8 +11,10 @@ const searchIndex = allPosts.map((p) => {
 		excerpt: getMDExcerpt(p.content),
 		date: p.date,
 		author: p.author,
+		tags: p.tags || [],
 	};
 });
+
 const searcher = new Searcher(searchIndex, {
 	keySelector: (obj) => `${obj.title}\n${obj.excerpt}`,
 });
@@ -22,10 +24,27 @@ export default function postHandler(req: NextApiRequest, res: NextApiResponse) {
 		query: { q },
 		method,
 	} = req;
+
 	if (method != "GET") {
 		res.setHeader("Allow", ["GET"]);
-		res.status(405).send(`Method ${method} Not Allowed`);
+		return res.status(405).send(`Method ${method} Not Allowed`);
 	}
+
+	const pass = process.env.SKETCH_VIEW_PASS;
+	const cookie = req.cookies['sketch_view'];
+	const hasAccess = cookie === pass;
+
 	const searchedPosts = searcher.search(q.toString(), { returnMatchData: true });
-	res.status(200).json(searchedPosts.slice(0, 10));
+
+	const filteredResults = searchedPosts
+		.filter((match) => {
+			const isSketch = match.item.tags?.includes("sketch");
+			if (isSketch) {
+				return hasAccess;
+			}
+			return true;
+		})
+		.slice(0, 10);
+
+	res.status(200).json(filteredResults);
 }
