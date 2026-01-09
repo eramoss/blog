@@ -32,7 +32,7 @@ export default function postHandler(req: NextApiRequest, res: NextApiResponse) {
 
 	const pass = process.env.SKETCH_VIEW_PASS;
 	const cookie = req.cookies['sketch_view'];
-	const hasAccess = cookie === pass;
+	const hasAccess = cookie === pass && cookie != undefined;
 
 	const searchedPosts = searcher.search(q.toString(), { returnMatchData: true });
 
